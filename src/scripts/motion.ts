@@ -22,12 +22,10 @@ const $$ = <T extends Element = HTMLElement>(selector: string, scope: ParentNode
 const EXPO = 'expo.out';
 const clamp01 = (t: number) => (t < 0 ? 0 : t > 1 ? 1 : t);
 
-/** On load the field gathers into the name (see field.ts); the line beneath it follows. */
 function intro(onDone: () => void) {
   gsap.fromTo('[data-hero-fade]', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 1.4, delay: 1.1, ease: EXPO, onComplete: onDone });
 }
 
-/** Leaving the hero: the line beneath the name fades as the letters pour into the first project. */
 function heroExit() {
   gsap.to('[data-hero-fade]', {
     opacity: 0,
@@ -37,18 +35,13 @@ function heroExit() {
   });
 }
 
-/**
- * Desktop: a project whose diorama forms in stages holds still while you scroll through it, so its
- * text stays put while the diorama plays. The field follows the whole held stretch (the pin's
- * spacer), so it keeps moving.
- */
+/** Desktop: pin projects whose diorama forms in stages. */
 function holdScenes() {
   for (const scene of $$('[data-scene][data-hold]')) {
     ScrollTrigger.create({ trigger: scene, start: 'top top', end: '+=130%', pin: true });
   }
 }
 
-/** Each project's text arrives once as it comes into view, and then stays put. */
 function reveals() {
   const targets = $$('[data-scene] [data-reveal]');
   gsap.set(targets, { opacity: 0, y: 28 });
@@ -59,13 +52,9 @@ function reveals() {
   });
 }
 
-/**
- * The particle field follows the scroll position directly. Inside a section its diorama plays through
- * its stages as the section passes; around the boundary between two sections one diorama melts into
- * the next. Scrolling back reverses exactly, and nothing plays on a timer.
- */
+/** Drives the field from the scroll position: stages within a section, blends across boundaries. */
 function follow(desktop: boolean, getField: () => Field | null) {
-  // A held section is measured by its pin spacer, which spans the whole held stretch.
+  // A pinned section is measured by its spacer, which spans the whole pin.
   const sections = $$('[data-field]').map((el) =>
     el.parentElement?.classList.contains('pin-spacer') ? (el.parentElement as HTMLElement) : el,
   );
@@ -73,7 +62,6 @@ function follow(desktop: boolean, getField: () => Field | null) {
   const stateOf = (outer: HTMLElement, stage: number): FieldState => {
     const el = outer.classList.contains('pin-spacer') ? (outer.firstElementChild as HTMLElement) : outer;
     const isName = el.dataset.field === 'name';
-    // On narrow screens a diorama sits centred and higher, sized to the width, and quieter under the text.
     const fit = desktop || isName ? 1 : Math.min(1, (window.innerWidth / window.innerHeight) * 0.95);
     const opacity = Number(el.dataset.fieldOpacity ?? 1) * (desktop || isName ? 1 : 0.45);
     return {
@@ -93,7 +81,7 @@ function follow(desktop: boolean, getField: () => Field | null) {
     const field = getField();
     const mid = window.innerHeight * 0.5;
     const rects = sections.map((el) => el.getBoundingClientRect());
-    // Half the depth of the zone around a boundary in which one diorama turns into the next.
+    // Half-depth of the blend zone around a boundary.
     const zone = window.innerHeight * 0.38;
 
     let k = 0;
@@ -121,7 +109,6 @@ function follow(desktop: boolean, getField: () => Field | null) {
     const sb = stateOf(sections[b], stageOf(b));
     field?.show(sa, sb, t);
 
-    // The ambient light follows whichever diorama dominates.
     const leadOuter = t < 0.5 ? sections[a] : sections[b];
     const lead = leadOuter.classList.contains('pin-spacer') ? (leadOuter.firstElementChild as HTMLElement) : leadOuter;
     const accent = lead.dataset.accent ?? '#c9cfd4';
@@ -148,7 +135,6 @@ function follow(desktop: boolean, getField: () => Field | null) {
   };
 }
 
-/** Desktop position marker for the project sequence. */
 function rail(smoother: ScrollSmoother | null) {
   const nav = $('[data-rail]');
   if (!nav) return;
@@ -172,9 +158,7 @@ function rail(smoother: ScrollSmoother | null) {
   };
 }
 
-// The field lives for the whole visit. three.js is most of the page's script weight, so it loads
-// after everything else and fades in; until then the hero's heading waits hidden, and if WebGL is
-// unavailable the heading shows instead.
+// three.js loads last; without WebGL the headline shows as text.
 const canvas = $<HTMLCanvasElement>('[data-field-canvas]');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let field: Field | null = null;
@@ -223,7 +207,7 @@ mm.add(
 
     window.__motionReady = true;
     intro(() => {
-      // The CSS start state is no longer needed; dropping it keeps a later revert from hiding the hero.
+      // Drop the CSS start state so a later revert can't hide the hero.
       root.classList.remove('motion');
       context.add(heroExit);
     });
@@ -241,5 +225,5 @@ mm.add(
   },
 );
 
-// Web fonts change line lengths, and so every trigger position.
+// Web fonts shift layout, and so trigger positions.
 document.fonts?.ready.then(() => ScrollTrigger.refresh());

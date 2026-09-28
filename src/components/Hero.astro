@@ -19,7 +19,7 @@ const focus = [
 
 <header class="hero" data-hero data-field="name" data-field-text="AI/ML Engineer|& Data Scientist" data-field-x="0" data-field-scale="1" data-field-opacity="1.4" data-accent="#e4e9ee">
   <div class="hero-center">
-    <!-- The particle field draws this headline; the heading is what it stands for, and the fallback without WebGL. -->
+    <!-- Drawn by the particle field; shown as text without WebGL. -->
     <h1 class="hero-name">AI/ML Engineer &amp; Data Scientist</h1>
     <ul class="hero-focus" data-hero-fade aria-label="Focus areas">
       {focus.map((item) => <li>{item}</li>)}
@@ -75,8 +75,7 @@ const focus = [
     text-align: center;
   }
 
-  /* With the field drawing the headline, the focus areas sit just below where it is drawn. */
-  /* Centred with insets and auto margins: the load animation owns this element's transform. */
+  /* Centred without transforms: the load animation owns this element's transform. */
   :global(.has-field) .hero-focus {
     position: absolute;
     top: 67%;
@@ -106,7 +105,7 @@ const focus = [
     text-wrap: balance;
   }
 
-  /* Once the field is drawing the name, the text steps back for screen readers only. */
+  /* Screen-reader only once the field draws it. */
   :global(.has-field) .hero-name {
     position: absolute;
     width: 1px;
@@ -159,7 +158,6 @@ const focus = [
     justify-self: center;
   }
 
-  /* Three equal buttons, so none of the three reads as more important. */
   .hero-contact {
     display: grid;
     grid-template-columns: repeat(3, 7.5rem);

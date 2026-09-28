@@ -1,10 +1,6 @@
 import { gsap } from 'gsap';
 
-/**
- * The closing ring of project cards. It turns slowly on its own; hovering lets it settle
- * with the nearest card facing you, dragging throws it, and it always comes to rest on a card.
- * The card at the front is the chosen one: its links show below the ring.
- */
+/** The closing ring of project cards: drifts, settles on hover, throws on drag. */
 export function createOrbit(section: HTMLElement, { still = false } = {}) {
   const stageEl = section.querySelector<HTMLElement>('[data-orbit]');
   const ringEl = section.querySelector<HTMLElement>('[data-ring]');
@@ -52,7 +48,6 @@ export function createOrbit(section: HTMLElement, { still = false } = {}) {
     cards.forEach((card, i) => {
       const facing = Math.cos(((i * step + state.spin) * Math.PI) / 180);
       const front = Math.max(0, facing);
-      // The front card lifts toward you; the ones behind recede into the dark.
       const lift = Math.pow(front, 6);
       card.style.transform = `translateZ(${lift * 60}px) scale(${1 + lift * 0.06})`;
       const face = faces[i];
@@ -67,13 +62,11 @@ export function createOrbit(section: HTMLElement, { still = false } = {}) {
   }
 
   function bringToFront(index: number) {
-    // Take the short way round.
     const target = -index * step;
     const turns = Math.round((state.spin - target) / 360);
     settleTo(target + turns * 360, 1.1);
   }
 
-  // Idle drift: slow, and it gives way the moment the pointer arrives.
   let drift = 0;
   const tick = (_time: number, delta: number) => {
     if (!inView || still) return;
@@ -85,7 +78,6 @@ export function createOrbit(section: HTMLElement, { still = false } = {}) {
     }
   };
 
-  // Drag to throw.
   let startX = 0;
   let lastX = 0;
   let lastT = 0;
@@ -105,7 +97,7 @@ export function createOrbit(section: HTMLElement, { still = false } = {}) {
     const now = performance.now();
     const dx = event.clientX - lastX;
     moved = Math.max(moved, Math.abs(event.clientX - startX));
-    // Capture only once it is really a drag, so a plain click still lands on the card.
+    // Capture only on a real drag, so clicks still reach the card.
     if (moved > 6 && !stage.hasPointerCapture(event.pointerId)) stage.setPointerCapture(event.pointerId);
     state.spin += dx * 0.28;
     velocity = (dx * 0.28) / Math.max(1, now - lastT);

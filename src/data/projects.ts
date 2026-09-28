@@ -1,7 +1,4 @@
-/**
- * What the background particle field shows while a section is in view: the name, a galaxy, or a
- * project's diorama, told in stages. See scripts/field.ts.
- */
+/** What the particle field shows for a section. See scripts/dioramas.ts. */
 export type Formation =
   | 'scatter'
   | 'name'
@@ -22,13 +19,10 @@ export interface ProjectLink {
 export interface Project {
   slug: string;
   title: string;
-  /** A few words for the orbit cards. */
   kind: string;
-  /** Roger's own copy, from the portfolio summary in the job-search folder. */
   description: string;
   stack: string[];
   links: ProjectLink[];
-  /** Colour of this project's light: particle tint, glow, link accents. */
   accent: string;
   formation: Formation;
 }

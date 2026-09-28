@@ -12,7 +12,6 @@ const description =
   'Roger Vergés, AI/ML Engineer and Data Scientist in Helsinki. Selected projects: deep learning services, LLM pipelines with guardrails, lakehouse data engineering and interactive 3D on the web.';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const canonical = new URL(Astro.url.pathname, Astro.site);
-// The link-preview card: a 1200x630 still of the hero (public/og.png).
 const ogImage = new URL(`${base}/og.png`, Astro.site);
 ---
 
@@ -40,8 +39,7 @@ const ogImage = new URL(`${base}/og.png`, Astro.site);
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
     <script is:inline>
-      // The hero's name is drawn by the particle field once it loads, so its text waits hidden.
-      // Everything hidden here is shown again after a grace period if the scripts never take over.
+      // Hide the headline until the field draws it; reveal it if the scripts never load.
       const root = document.documentElement;
       root.classList.add('field-pending');
       if (!matchMedia('(prefers-reduced-motion: reduce)').matches) root.classList.add('motion');

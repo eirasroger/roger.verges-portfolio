@@ -15,13 +15,9 @@ import { gsap } from 'gsap';
 import type { Formation } from '../data/projects';
 import { clamp01, gauss, random, sequences, smooth, type SequenceSpec, type Vec } from './dioramas';
 
-/**
- * The background particle field. One cloud of points plays every visual on the page: the name in
- * the hero, and for each project a diorama of what the project does (see dioramas.ts). The page tells
- * it, every frame, which formation to show and how far one has turned into the next.
- */
+/** The background particle field; formations live in dioramas.ts. */
 
-/** Points sampled from the hero's headline set in the page's own typeface, sized to the view. */
+/** Points sampled from the headline text, sized to the view. */
 function nameShape(lines: string[], count: number, halfWidth: number, halfHeight: number, rnd: () => number): Vec[] {
   const W = 2000;
   const canvas = document.createElement('canvas');
@@ -54,7 +50,6 @@ function nameShape(lines: string[], count: number, halfWidth: number, halfHeight
   }
   if (!inked.length) return [];
 
-  // As large as the view allows, leaving room for the line along the bottom.
   const width = Math.min(halfWidth * 2 * 0.74, halfHeight * 2 * 0.46 * (W / H));
   const k = width / W;
   const lift = halfHeight * 0.17;
@@ -83,7 +78,6 @@ const vertex = /* glsl */ `
   varying float vGlow;
   void main() {
     vec3 p = position;
-    // Dust floats freely; points that belong to a shape only tremble.
     float a = uDrift + uAgitation + aDust * 0.3;
     p += a * vec3(
       sin(uTime * 0.7 + aSeed * 40.0),
@@ -91,8 +85,7 @@ const vertex = /* glsl */ `
       sin(uTime * 0.5 + aSeed * 11.0)
     );
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
-    // Near the pointer, points ease aside and are carried along its motion like a wake: a soft
-    // bell-shaped reach, a different response per point so no clean ring forms, and a slight swirl.
+    // Pointer wake: soft push plus drag along the pointer's motion.
     vec4 clip = projectionMatrix * mv;
     vec2 d = clip.xy / clip.w - uPointer;
     d.x *= uAspect;
@@ -124,9 +117,7 @@ const fragment = /* glsl */ `
   void main() {
     float d = length(gl_PointCoord - 0.5);
     float disc = smoothstep(0.5, 0.05, d);
-    // Bright points run hot toward white; quiet ones keep the project's colour.
     vec3 color = mix(uColor * 0.85, vec3(1.0), smoothstep(0.6, 1.0, vTone) * 0.7);
-    // A faint glow where the pointer passes.
     color = mix(color, vec3(1.0), vGlow * 0.35);
     gl_FragColor = vec4(color, disc * vAlpha * uOpacity * (1.0 + vGlow * 0.6));
   }
@@ -135,23 +126,18 @@ const fragment = /* glsl */ `
 export interface FieldState {
   formation: Formation;
   color: string;
-  /** Horizontal position of the diorama, as a fraction of the half-width of the view (-1 to 1). */
+  /** -1 to 1, fraction of the half-width. */
   x: number;
-  /** Vertical position, as a fraction of the half-height of the view (-1 bottom to 1 top). */
+  /** -1 to 1, fraction of the half-height. */
   y?: number;
   scale: number;
   opacity: number;
-  /** How far through the formation's stages, from 0 to 1. */
   stage?: number;
 }
 
 export interface Field {
-  /**
-   * Show formation `a` turning into formation `b`, `t` of the way (0 is all `a`, 1 is all `b`).
-   * The page calls this every frame from the scroll position, so the field is a direct function of it.
-   */
+  /** Show `a` blending into `b` by `t`; called every frame from the scroll position. */
   show(a: FieldState, b: FieldState, t: number): void;
-  /** 0 when still; grows with scroll speed. */
   agitate(amount: number): void;
   destroy(): void;
 }
@@ -163,13 +149,11 @@ interface Stage {
   ry: number;
 }
 
-/** How the field behaves per formation: the name stays nearly still to stay legible. */
+/** The headline stays nearly still to stay legible. */
 const FEEL_NAME = { sway: 0.008, tilt: 0.05, part: 1, drift: 0.004, size: 0.58 };
 const FEEL_SHAPE = { sway: 0.1, tilt: 1, part: 0, drift: 0.025, size: 0.75 };
 
-/**
- * `headline` is the text the hero's formation ('name') draws, one entry per line.
- */
+/** `headline`: the text the 'name' formation draws, one entry per line. */
 export function createField(
   canvas: HTMLCanvasElement,
   { still = false, headline = [] as string[] } = {},
@@ -183,8 +167,7 @@ export function createField(
 
   const small = matchMedia('(max-width: 48rem)').matches;
   const count = small ? 9000 : 20000;
-  // A share of the points never joins a shape: dust drifting through the whole view, the same in
-  // every formation, so the space around each diorama never goes empty.
+  // Background dust, shared by every formation.
   const dust = Math.round(count * 0.14);
   const shaped = count - dust;
 
@@ -206,7 +189,7 @@ export function createField(
     }
   }
 
-  // Every stage of every static formation, baked into flat buffers once; live ones keep their roles.
+  // Static formations are baked once; live ones keep only their roles.
   const rolesOf = {} as Record<Formation, number[]>;
   function bake(name: Formation, spec: SequenceSpec, seed: number): Stage[] {
     const total = spec.roles.reduce((a, b) => a + b, 0);
@@ -286,10 +269,8 @@ export function createField(
   scene.add(group);
 
   const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
-  // The pointer as the distortion sees it: eased toward the mouse, with a smoothed velocity, and a
-  // strength that fades in when the mouse is over the page and out, in place, when it leaves.
+  // Smoothed pointer for the wake; fades in place when the mouse leaves.
   const hover = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0, strength: 0, active: false, placed: false };
-  // `entry` pours the points in from wherever they were: on load, and when the name is redrawn.
   const entry = { value: 0 };
   const fadeIn = { value: 0 };
   let request: { a: FieldState; b: FieldState; t: number } | null = null;
@@ -351,7 +332,6 @@ export function createField(
 
   const isLive = (f: Formation) => f !== 'name' && Boolean(sequences[f as keyof typeof sequences].live);
 
-  /** Write where formation `state` puts every point into `pos`/`tone`; returns its rotation. */
   function evaluate(state: FieldState, time: number, pos: Float32Array, tone: Float32Array) {
     const f = state.formation;
     if (isLive(f)) {
@@ -384,7 +364,7 @@ export function createField(
       tone.set(a.tone);
     } else {
       for (let i = 0; i < count; i++) {
-        // Each point moves a little after the last, so a change of shape pours rather than snaps.
+        // Per-point delay, so shapes pour rather than snap.
         const e = smooth(clamp01(t * 1.5 - seeds[i] * 0.5));
         const j = i * 3;
         pos[j] = a.pos[j] + (b.pos[j] - a.pos[j]) * e;
@@ -454,7 +434,7 @@ export function createField(
       hover.y = ny;
     }
     hover.strength += ((hover.active ? 1 : 0) - hover.strength) * (hover.active ? 0.08 : 0.04);
-    // Velocity from screen units to world units, capped so a flick never tears the shape apart.
+    // Screen to world units, capped.
     let dx = hover.vx * halfWidth * 3;
     let dy = hover.vy * halfHeight * 3;
     const len = Math.hypot(dx, dy);
@@ -517,7 +497,7 @@ export function createField(
     window.addEventListener('pointermove', onPointer, { passive: true });
     document.documentElement.addEventListener('pointerleave', onLeave);
   }
-  // The name needs the web font before it can be drawn into points.
+  // The headline needs the web font.
   document.fonts.load('650 100px "Mona Sans Variable"').then(buildName, buildName);
   gsap.to(fadeIn, { value: 1, duration: still ? 0 : 1.2, ease: 'power2.out' });
   pour(2.4);

@@ -9,9 +9,8 @@ interface Props {
 }
 
 const { project, index } = Astro.props;
-// The diorama plays on the right in even scenes and on the left in odd ones; the text takes the other side.
 const side = index % 2 === 0 ? 'right' : 'left';
-// Only dioramas told in stages hold the page still while they form; the others keep moving on their own.
+// Only staged dioramas pin the section.
 const hold = sequences[project.formation as keyof typeof sequences].stages.length > 1;
 // Keep compounds like "Context-Adaptive" on one line.
 const title = project.title.replaceAll('-', '‑');
@@ -31,7 +30,7 @@ const title = project.title.replaceAll('-', '‑');
   aria-labelledby={`${project.slug}-title`}
 >
   <div class="scene-inner">
-    <!-- On narrow screens this empty band is where the particle field draws the diorama. -->
+    <!-- Room for the diorama on narrow screens. -->
     <div class="scene-stage" aria-hidden="true"></div>
 
     <div class="scene-text">
@@ -124,10 +123,6 @@ const title = project.title.replaceAll('-', '‑');
     padding-top: 0.4rem;
   }
 
-  /*
-   * Desktop: one screen per project, held in place while its diorama plays (see motion.ts). The text
-   * keeps to its own half; the other half is left to the field.
-   */
   @media (min-width: 64rem) {
     .scene {
       min-height: 100svh;
@@ -154,7 +149,6 @@ const title = project.title.replaceAll('-', '‑');
       grid-column: 8 / span 4;
     }
 
-    /* Scenes that keep moving on their own are not held, so they get a little more room to pass. */
     .scene:not([data-hold]),
     .scene:not([data-hold]) .scene-inner {
       min-height: 125svh;

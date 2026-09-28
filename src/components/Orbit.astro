@@ -3,7 +3,7 @@ import { projects } from '../data/projects';
 import { sketch } from '../scripts/dioramas';
 import Icon from './Icon.astro';
 
-/** Each card shows a still of its project's diorama, drawn from the same shapes as the field. */
+/** A still of the project's diorama, sketched at build time. */
 function art(formation: Parameters<typeof sketch>[0]) {
   const points = sketch(formation, 1100).filter(([, , tone]) => tone > -0.2);
   const xs = points.map((p) => p[0]);

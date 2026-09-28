@@ -1,4 +1,4 @@
-# roger.verges-portfolio
+# Portfolio
 
 Personal portfolio website showcasing projects, experience, skills, and professional background.
 

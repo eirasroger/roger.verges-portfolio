@@ -1,6 +1,5 @@
 ---
 import '../styles/global.css';
-import portrait from '../../assets/general/me.jpeg';
 import Hero from '../components/Hero.astro';
 import Project from '../components/Project.astro';
 import Orbit from '../components/Orbit.astro';
@@ -13,7 +12,8 @@ const description =
   'Roger Vergés, AI/ML Engineer and Data Scientist in Helsinki. Selected projects: deep learning services, LLM pipelines with guardrails, lakehouse data engineering and interactive 3D on the web.';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const canonical = new URL(Astro.url.pathname, Astro.site);
-const ogImage = new URL(portrait.src, Astro.site);
+// The link-preview card: a 1200x630 still of the hero (public/og.png).
+const ogImage = new URL(`${base}/og.png`, Astro.site);
 ---
 
 <!doctype html>
@@ -27,11 +27,18 @@ const ogImage = new URL(portrait.src, Astro.site);
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
     <meta name="theme-color" content="#0e1113" />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Roger Vergés" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="AI/ML Engineer & Data Scientist, drawn in particles. Roger Vergés, Helsinki." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
     <script is:inline>
       // The hero's name is drawn by the particle field once it loads, so its text waits hidden.
       // Everything hidden here is shown again after a grace period if the scripts never take over.

@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local planning notes and agent tooling
+docs/
+.claude/
+
+# Astro
+.astro/
+node_modules/
+dist/

@@ -1,0 +1,89 @@
+---
+import { projects } from '../data/projects';
+---
+
+<nav class="rail" aria-label="Projects" data-rail>
+  <ul>
+    {
+      projects.map((project) => (
+        <li>
+          <a href={`#${project.slug}`} data-rail-link={project.slug} style={`--accent: ${project.accent}`}>
+            <span class="rail-mark" aria-hidden="true" />
+            <span class="rail-label">{project.title}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .rail {
+    display: none;
+  }
+
+  /* Desktop only: a quiet position marker for the project sequence. */
+  @media (min-width: 80rem) {
+    .rail {
+      display: block;
+      position: fixed;
+      right: calc(var(--gutter) * 0.35);
+      top: 50%;
+      translate: 0 -50%;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 300ms ease;
+    }
+
+    .rail:global(.is-visible) {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  ul {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  a {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block: 0.3rem;
+    text-decoration: none;
+  }
+
+  .rail-mark {
+    width: 0.75rem;
+    height: 2px;
+    background: var(--slate);
+    transition:
+      width 300ms var(--ease-out),
+      background-color 300ms ease;
+  }
+
+  a:global(.is-active) .rail-mark {
+    width: 1.75rem;
+    background: var(--accent);
+  }
+
+  .rail-label {
+    font-size: var(--step--1);
+    color: var(--ash);
+    white-space: nowrap;
+    opacity: 0;
+    translate: 0.25rem 0;
+    transition:
+      opacity 200ms ease,
+      translate 200ms var(--ease-out);
+  }
+
+  a:hover .rail-label,
+  a:focus-visible .rail-label {
+    opacity: 1;
+    translate: 0 0;
+  }
+</style>

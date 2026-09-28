@@ -1,0 +1,163 @@
+---
+import type { Project } from '../data/projects';
+import { sequences } from '../scripts/dioramas';
+import Icon from './Icon.astro';
+
+interface Props {
+  project: Project;
+  index: number;
+}
+
+const { project, index } = Astro.props;
+// The diorama plays on the right in even scenes and on the left in odd ones; the text takes the other side.
+const side = index % 2 === 0 ? 'right' : 'left';
+// Only dioramas told in stages hold the page still while they form; the others keep moving on their own.
+const hold = sequences[project.formation as keyof typeof sequences].stages.length > 1;
+// Keep compounds like "Context-Adaptive" on one line.
+const title = project.title.replaceAll('-', '‑');
+---
+
+<article
+  class="scene"
+  id={project.slug}
+  data-scene
+  data-side={side}
+  data-field={project.formation}
+  data-hold={hold ? '' : undefined}
+  data-field-x={side === 'right' ? 0.36 : -0.36}
+  data-field-scale="0.9"
+  data-accent={project.accent}
+  style={`--accent: ${project.accent}`}
+  aria-labelledby={`${project.slug}-title`}
+>
+  <div class="scene-inner">
+    <!-- On narrow screens this empty band is where the particle field draws the diorama. -->
+    <div class="scene-stage" aria-hidden="true"></div>
+
+    <div class="scene-text">
+      <h2 class="scene-title" id={`${project.slug}-title`} data-reveal>{title}</h2>
+      <p class="scene-kind" data-reveal>{project.kind}</p>
+      <p class="scene-desc" data-reveal>{project.description}</p>
+
+      <ul class="scene-stack" data-reveal aria-label="Stack">
+        {project.stack.map((item) => <li>{item}</li>)}
+      </ul>
+
+      <div class="scene-links" data-reveal>
+        {
+          project.links.map((link) => (
+            <a class="button" href={link.href} target="_blank" rel="noopener" data-primary={link.kind === 'code' ? '' : undefined}>
+              <Icon name={link.kind} />
+              {link.label}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</article>
+
+<style>
+  .scene {
+    position: relative;
+    padding: clamp(4rem, 10vw, 6rem) var(--gutter);
+  }
+
+  .scene-inner {
+    max-width: var(--max);
+    margin-inline: auto;
+  }
+
+  .scene-stage {
+    height: 58svh;
+  }
+
+  .scene-text {
+    display: grid;
+    gap: 1.1rem;
+    align-content: start;
+    max-width: 32rem;
+  }
+
+  .scene-title {
+    font-size: clamp(2rem, 1rem + 2.4vw, 3.6rem);
+    font-weight: 640;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+    font-variation-settings: 'wdth' 112;
+    margin-bottom: 0.4rem;
+  }
+
+  .scene-kind {
+    color: var(--accent);
+    font-size: var(--step-0);
+    font-weight: 560;
+    font-variation-settings: 'wdth' 108;
+  }
+
+  .scene-desc {
+    color: color-mix(in srgb, var(--limestone) 80%, var(--ink));
+    font-size: 0.95rem;
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+
+  .scene-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0;
+    font-size: var(--step--1);
+    color: var(--ash);
+  }
+
+  .scene-stack li:not(:last-child)::after {
+    content: '/';
+    margin-inline: 0.6rem;
+    color: color-mix(in srgb, var(--accent) 55%, var(--slate));
+  }
+
+  .scene-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding-top: 0.4rem;
+  }
+
+  /*
+   * Desktop: one screen per project, held in place while its diorama plays (see motion.ts). The text
+   * keeps to its own half; the other half is left to the field.
+   */
+  @media (min-width: 64rem) {
+    .scene {
+      min-height: 100svh;
+      padding-block: 0;
+    }
+
+    .scene-inner {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: clamp(1.5rem, 3vw, 3rem);
+      min-height: 100svh;
+      align-items: center;
+    }
+
+    .scene-stage {
+      display: none;
+    }
+
+    .scene-text {
+      grid-column: 2 / span 4;
+    }
+
+    .scene[data-side='left'] .scene-text {
+      grid-column: 8 / span 4;
+    }
+
+    /* Scenes that keep moving on their own are not held, so they get a little more room to pass. */
+    .scene:not([data-hold]),
+    .scene:not([data-hold]) .scene-inner {
+      min-height: 125svh;
+    }
+  }
+</style>

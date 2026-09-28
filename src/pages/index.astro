@@ -1,0 +1,66 @@
+---
+import '../styles/global.css';
+import portrait from '../../assets/general/me.jpeg';
+import Hero from '../components/Hero.astro';
+import Project from '../components/Project.astro';
+import Orbit from '../components/Orbit.astro';
+import Contact from '../components/Contact.astro';
+import Rail from '../components/Rail.astro';
+import { projects } from '../data/projects';
+
+const title = 'Roger Vergés, AI/ML Engineer & Data Scientist';
+const description =
+  'Roger Vergés, AI/ML Engineer and Data Scientist in Helsinki. Selected projects: deep learning services, LLM pipelines with guardrails, lakehouse data engineering and interactive 3D on the web.';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(portrait.src, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+    <meta name="theme-color" content="#0e1113" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary" />
+    <script is:inline>
+      // The hero's name is drawn by the particle field once it loads, so its text waits hidden.
+      // Everything hidden here is shown again after a grace period if the scripts never take over.
+      const root = document.documentElement;
+      root.classList.add('field-pending');
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) root.classList.add('motion');
+      setTimeout(() => {
+        if (!window.__motionReady) root.classList.remove('motion');
+        if (!root.classList.contains('has-field')) root.classList.remove('field-pending');
+      }, 4000);
+    </script>
+  </head>
+  <body>
+    <canvas class="field" data-field-canvas aria-hidden="true"></canvas>
+    <div class="ambient" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <Rail />
+    <div id="smooth-wrapper">
+      <div id="smooth-content">
+        <Hero />
+        <main id="work">
+          {projects.map((project, index) => <Project project={project} index={index} />)}
+          <Orbit />
+        </main>
+        <Contact />
+      </div>
+    </div>
+    <script>
+      import '../scripts/motion';
+    </script>
+  </body>
+</html>

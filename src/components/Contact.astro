@@ -1,0 +1,69 @@
+---
+import { contact } from '../data/projects';
+import Icon from './Icon.astro';
+---
+
+<footer class="contact" aria-labelledby="contact-title" data-field="galaxy" data-field-x="0" data-field-scale="1.6" data-field-opacity="0.45" data-accent="#9fb3c8">
+  <div class="contact-inner">
+    <h2 class="visually-hidden" id="contact-title">Contact</h2>
+    <a class="contact-email" href={`mailto:${contact.email}`}>{contact.email}</a>
+    <ul class="contact-links">
+      <li><a class="button" href={contact.linkedin} target="_blank" rel="noopener"><Icon name="linkedin" />LinkedIn</a></li>
+      <li><a class="button" href={contact.github} target="_blank" rel="noopener"><Icon name="code" />GitHub</a></li>
+    </ul>
+    <p class="contact-note">© {new Date().getFullYear()} Roger Vergés</p>
+  </div>
+</footer>
+
+<style>
+  .contact {
+    padding: clamp(4rem, 10vw, 8rem) var(--gutter) var(--gutter);
+  }
+
+  .contact-inner {
+    max-width: var(--max);
+    margin-inline: auto;
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .contact-email {
+    font-size: clamp(1.25rem, 0.9rem + 1.6vw, 2.4rem);
+    font-weight: 600;
+    font-variation-settings: 'wdth' 118;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    width: fit-content;
+    background-image: linear-gradient(var(--limestone), var(--limestone));
+    background-size: 0% 2px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    padding-bottom: 0.1em;
+    transition: background-size 500ms var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .contact-email:hover {
+      background-size: 100% 2px;
+    }
+  }
+
+  .contact-links {
+    display: grid;
+    grid-template-columns: repeat(2, 7.5rem);
+    gap: 0.5rem;
+  }
+
+  .contact-links .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .contact-note {
+    margin-top: clamp(3rem, 8vw, 6rem);
+    color: var(--ash);
+    font-size: var(--step--1);
+  }
+</style>

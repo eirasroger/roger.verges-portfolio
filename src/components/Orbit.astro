@@ -1,0 +1,268 @@
+---
+import { projects } from '../data/projects';
+import { sketch } from '../scripts/dioramas';
+import Icon from './Icon.astro';
+
+/** Each card shows a still of its project's diorama, drawn from the same shapes as the field. */
+function art(formation: Parameters<typeof sketch>[0]) {
+  const points = sketch(formation, 1100).filter(([, , tone]) => tone > -0.2);
+  const xs = points.map((p) => p[0]);
+  const ys = points.map((p) => p[1]);
+  const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const W = 100;
+  const H = 72;
+  const pad = 9;
+  const k = Math.min((W - pad * 2) / (maxX - minX || 1), (H - pad * 2) / (maxY - minY || 1));
+  const ox = (W - (maxX - minX) * k) / 2;
+  const oy = (H - (maxY - minY) * k) / 2;
+  return points.map(([x, y, tone]) => ({
+    cx: +(ox + (x - minX) * k).toFixed(2),
+    cy: +(oy + (maxY - y) * k).toFixed(2),
+    o: +(0.22 + 0.7 * Math.min(1, Math.max(0, tone))).toFixed(2),
+  }));
+}
+
+const cards = projects.map((project) => ({ project, dots: art(project.formation as Parameters<typeof sketch>[0]) }));
+---
+
+<section class="orbit" aria-labelledby="orbit-title" data-orbit-section data-field="galaxy" data-field-x="0" data-field-scale="1.2" data-accent="#c3b8ff">
+  <h2 class="orbit-title" id="orbit-title">All projects</h2>
+
+  <div class="orbit-stage" data-orbit>
+    <div class="orbit-ring" data-ring>
+      {
+        cards.map(({ project, dots }, i) => (
+          <div class="card-slot" data-slot={i} style={`--accent: ${project.accent}`}>
+            <button class="card" type="button" data-card={i} aria-label={`${project.title}: bring to front`}>
+              <span class="card-face">
+                <span class="card-art" aria-hidden="true">
+                  <svg viewBox="0 0 100 72" preserveAspectRatio="xMidYMid meet">
+                    {dots.map((d) => (
+                      <circle cx={d.cx} cy={d.cy} r="0.42" fill-opacity={d.o} />
+                    ))}
+                  </svg>
+                </span>
+                <span class="card-meta">
+                  <span class="card-kind">{project.kind}</span>
+                  <span class="card-name">{project.title.replaceAll('-', '‑')}</span>
+                </span>
+              </span>
+              <span class="card-back" aria-hidden="true" />
+            </button>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="orbit-detail" aria-live="polite">
+    <button class="orbit-step" type="button" data-step="-1" aria-label="Previous project"><Icon name="prev" /></button>
+    <div class="orbit-picked">
+      {
+        projects.map((project, i) => (
+          <div class="picked" data-picked={i} hidden={i !== 0} style={`--accent: ${project.accent}`}>
+            <div class="picked-links">
+              {project.links.map((link) => (
+                <a class="button" href={link.href} target="_blank" rel="noopener" data-primary={link.kind === 'code' ? '' : undefined}>
+                  <Icon name={link.kind} />
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+    <button class="orbit-step" type="button" data-step="1" aria-label="Next project"><Icon name="next" /></button>
+  </div>
+</section>
+
+<style>
+  .orbit {
+    position: relative;
+    padding: clamp(6rem, 12vw, 9rem) var(--gutter) clamp(4rem, 8vw, 6rem);
+    overflow: hidden;
+  }
+
+  .orbit-title {
+    text-align: center;
+    font-size: var(--step--1);
+    font-weight: 500;
+    color: var(--ash);
+  }
+
+  .orbit-stage {
+    --card-w: clamp(12rem, 16vw, 15rem);
+    position: relative;
+    height: calc(var(--card-w) * 1.85);
+    margin-top: clamp(1.5rem, 4vw, 3rem);
+    perspective: 2200px;
+    perspective-origin: 50% 30%;
+    touch-action: pan-y;
+    cursor: grab;
+    user-select: none;
+  }
+
+  .orbit-stage:active {
+    cursor: grabbing;
+  }
+
+  .orbit-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+  }
+
+  .card-slot {
+    position: absolute;
+    left: calc(var(--card-w) / -2);
+    top: calc(var(--card-w) * -0.68);
+    width: var(--card-w);
+    transform-style: preserve-3d;
+  }
+
+  .card {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: inherit;
+    transform-style: preserve-3d;
+    text-align: left;
+    border-radius: 1.1rem;
+  }
+
+  .card-face,
+  .card-back {
+    border-radius: 1.1rem;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    background:
+      linear-gradient(165deg, color-mix(in srgb, var(--accent) 10%, #1b2024) 0%, #13171a 55%, #101315 100%);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--accent) 45%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--limestone) 7%, transparent),
+      0 30px 60px -28px rgba(0, 0, 0, 0.85),
+      0 0 50px -24px color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+
+  .card-face {
+    display: grid;
+    gap: 0.9rem;
+    padding: 0.55rem 0.55rem 1.1rem;
+  }
+
+  .card-back {
+    position: absolute;
+    inset: 0;
+    transform: rotateY(180deg);
+  }
+
+  .card-art {
+    display: block;
+    aspect-ratio: 100 / 72;
+    border-radius: 0.7rem;
+    overflow: hidden;
+    background:
+      radial-gradient(90% 90% at 50% 40%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%),
+      #0b0e10;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--limestone) 5%, transparent);
+  }
+
+  .card-art svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: var(--accent);
+  }
+
+  .card-meta {
+    display: grid;
+    gap: 0.3rem;
+    padding-inline: 0.45rem;
+  }
+
+  .card-kind {
+    font-size: 0.72rem;
+    color: color-mix(in srgb, var(--accent) 80%, var(--limestone));
+  }
+
+  .card-name {
+    font-size: clamp(0.92rem, 0.82rem + 0.3vw, 1.05rem);
+    font-weight: 600;
+    line-height: 1.22;
+    color: var(--limestone);
+    font-variation-settings: 'wdth' 104;
+    text-wrap: balance;
+  }
+
+  .orbit-detail {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    max-width: 40rem;
+    margin: clamp(1.25rem, 3vw, 2.25rem) auto 0;
+  }
+
+  .orbit-picked {
+    display: grid;
+  }
+
+  .picked {
+    grid-area: 1 / 1;
+    display: grid;
+    justify-items: center;
+  }
+
+  .picked[hidden] {
+    display: none;
+  }
+
+  .picked-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .orbit-step {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--limestone) 18%, transparent);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      transform 160ms var(--ease-out),
+      border-color 200ms ease;
+  }
+
+  .orbit-step svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .orbit-step:active {
+    transform: scale(0.95);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .orbit-step:hover {
+      border-color: var(--limestone);
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .orbit-stage {
+      --card-w: 10.5rem;
+    }
+  }
+</style>

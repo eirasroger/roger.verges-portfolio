@@ -42,13 +42,21 @@ function holdScenes() {
   }
 }
 
+/** Each project panel arrives with its contents, so the panel is never seen empty. */
 function reveals() {
-  const targets = $$('[data-scene] [data-reveal]');
-  gsap.set(targets, { opacity: 0, y: 28 });
-  ScrollTrigger.batch(targets, {
+  const panels = $$('[data-scene] [data-reveal-panel]');
+  for (const panel of panels) {
+    gsap.set(panel, { opacity: 0, y: 28 });
+    gsap.set($$('[data-reveal]', panel), { opacity: 0, y: 16 });
+  }
+  ScrollTrigger.batch(panels, {
     start: 'top 88%',
     once: true,
-    onEnter: (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 1.1, ease: EXPO, stagger: 0.08 }),
+    onEnter: (batch) =>
+      batch.forEach((panel) => {
+        gsap.to(panel, { opacity: 1, y: 0, duration: 1.1, ease: EXPO });
+        gsap.to($$('[data-reveal]', panel), { opacity: 1, y: 0, duration: 1.1, ease: EXPO, stagger: 0.07, delay: 0.1 });
+      }),
   });
 }
 
@@ -66,7 +74,7 @@ function follow(desktop: boolean, getField: () => Field | null) {
     const opacity = Number(el.dataset.fieldOpacity ?? 1) * (desktop || isName ? 1 : 0.45);
     return {
       formation: el.dataset.field as Formation,
-      color: el.dataset.accent ?? '#c9cfd4',
+      color: el.dataset.accent ?? '#5f6b7d',
       x: desktop ? Number(el.dataset.fieldX ?? 0) : 0,
       y: desktop || isName ? 0 : 0.28,
       scale: Number(el.dataset.fieldScale ?? 1) * fit,
@@ -75,7 +83,6 @@ function follow(desktop: boolean, getField: () => Field | null) {
     };
   };
 
-  let lastAccent = '';
   let lastActive = '';
   const tick = () => {
     const field = getField();
@@ -111,12 +118,6 @@ function follow(desktop: boolean, getField: () => Field | null) {
 
     const leadOuter = t < 0.5 ? sections[a] : sections[b];
     const lead = leadOuter.classList.contains('pin-spacer') ? (leadOuter.firstElementChild as HTMLElement) : leadOuter;
-    const accent = lead.dataset.accent ?? '#c9cfd4';
-    if (accent !== lastAccent) {
-      lastAccent = accent;
-      root.style.setProperty('--scene-accent', accent);
-      root.style.setProperty('--ambient-x', `${50 + (t < 0.5 ? sa.x : sb.x) * 50}%`);
-    }
     if (lead.id !== lastActive) {
       lastActive = lead.id;
       railLinks.forEach((link) => link.classList.toggle('is-active', link.dataset.railLink === lead.id));

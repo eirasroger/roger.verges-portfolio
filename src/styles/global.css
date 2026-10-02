@@ -1,28 +1,19 @@
-@import '@fontsource-variable/mona-sans/standard.css';
+@import '@fontsource-variable/schibsted-grotesk/wght.css';
 
-/* Registered so the ambient light can fade between project colours. */
-@property --scene-accent {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: #86a6c8;
-}
-
-@property --ambient-x {
-  syntax: '<percentage>';
-  inherits: true;
-  initial-value: 70%;
-}
-
+/* Palette and type from Asumisvalinta: frost page, white panels, thin lines, ink text. */
 :root {
-  --ink: #0e1113;
-  --graphite: #171b1e;
-  --slate: #2c3338;
-  --ash: #8e979e;
-  --mist: #c9cfd4;
-  --limestone: #eeebe5;
-  --patina: #86bfab;
+  --page: #f3f5f7;
+  --paper: #ffffff;
+  --well: #eef1f4;
+  --text: #1a2530;
+  --mist: #4b5866;
+  --ash: #7c8794;
+  --hairline: #e2e7ec;
+  --slate: #cfd6dd;
+  --shadow: 0 1px 2px rgba(26, 37, 48, 0.06), 0 8px 24px -6px rgba(26, 37, 48, 0.14);
+  --radius: 8px;
 
-  --font: 'Mona Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font: 'Schibsted Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 
@@ -33,10 +24,7 @@
   --step-0: clamp(0.98rem, 0.95rem + 0.15vw, 1.075rem);
   --step-1: clamp(1.15rem, 1.05rem + 0.5vw, 1.45rem);
 
-  color-scheme: dark;
-  transition:
-    --scene-accent 1.4s ease,
-    --ambient-x 1.4s ease;
+  color-scheme: light;
 }
 
 *,
@@ -48,13 +36,13 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  background: var(--ink);
+  background: var(--page);
 }
 
 body {
   margin: 0;
-  background: var(--ink);
-  color: var(--limestone);
+  background: var(--page);
+  color: var(--text);
   font-family: var(--font);
   font-size: var(--step-0);
   line-height: 1.6;
@@ -93,13 +81,13 @@ button {
 }
 
 ::selection {
-  background: var(--limestone);
-  color: var(--ink);
+  background: var(--text);
+  color: var(--paper);
 }
 
 :focus-visible {
-  outline: 2px solid var(--limestone);
-  outline-offset: 3px;
+  outline: 2px solid rgba(42, 120, 214, 0.35);
+  outline-offset: 2px;
   border-radius: 4px;
 }
 
@@ -113,7 +101,7 @@ button {
   white-space: nowrap;
 }
 
-/* ---------- Atmosphere: particle canvas, ambient light, vignette, grain ---------- */
+/* ---------- Particle canvas ---------- */
 
 .field {
   position: fixed;
@@ -130,41 +118,6 @@ button {
   opacity: 1;
 }
 
-.ambient {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(60% 55% at var(--ambient-x, 70%) 45%, color-mix(in srgb, var(--scene-accent) 16%, transparent), transparent 70%),
-    radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.55));
-}
-
-.grain {
-  position: fixed;
-  inset: -50%;
-  z-index: 50;
-  pointer-events: none;
-  opacity: 0.07;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation: grain 1.2s steps(6) infinite;
-}
-
-@keyframes grain {
-  0% { transform: translate(0, 0); }
-  20% { transform: translate(-3%, 2%); }
-  40% { transform: translate(2%, -4%); }
-  60% { transform: translate(-4%, -1%); }
-  80% { transform: translate(3%, 3%); }
-  100% { transform: translate(0, 0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .grain {
-    animation: none;
-  }
-}
-
 #smooth-wrapper {
   position: relative;
   z-index: 1;
@@ -173,9 +126,9 @@ button {
 /* ---------- Shared controls ---------- */
 
 .link {
-  color: var(--limestone);
+  color: var(--text);
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--limestone) 35%, transparent);
+  text-decoration-color: var(--slate);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.3em;
   transition: text-decoration-color 200ms ease;
@@ -183,7 +136,7 @@ button {
 
 @media (hover: hover) and (pointer: fine) {
   .link:hover {
-    text-decoration-color: var(--limestone);
+    text-decoration-color: var(--text);
   }
 }
 
@@ -191,19 +144,21 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  height: 2.75rem;
-  padding: 0 1.15rem;
-  border-radius: 999px;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: var(--radius);
   font-size: var(--step--1);
-  font-weight: 560;
+  font-weight: 550;
   text-decoration: none;
   white-space: nowrap;
-  border: 1px solid color-mix(in srgb, var(--accent, var(--limestone)) 45%, transparent);
-  background: color-mix(in srgb, var(--accent, var(--limestone)) 8%, transparent);
+  color: var(--text);
+  border: 1px solid var(--hairline);
+  background: var(--paper);
+  box-shadow: 0 1px 2px rgba(26, 37, 48, 0.06);
   transition:
     transform 160ms var(--ease-out),
-    background-color 250ms ease,
-    border-color 250ms ease;
+    background-color 200ms ease,
+    border-color 200ms ease;
 }
 
 .button svg {
@@ -213,9 +168,9 @@ button {
 }
 
 .button[data-primary] {
-  background: var(--limestone);
-  border-color: var(--limestone);
-  color: var(--ink);
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--paper);
 }
 
 .button:active {
@@ -224,12 +179,12 @@ button {
 
 @media (hover: hover) and (pointer: fine) {
   .button:hover {
-    background: color-mix(in srgb, var(--accent, var(--limestone)) 18%, transparent);
-    border-color: var(--accent, var(--limestone));
+    border-color: var(--slate);
+    background: var(--well);
   }
 
   .button[data-primary]:hover {
-    background: #fff;
-    border-color: #fff;
+    background: #0d141b;
+    border-color: #0d141b;
   }
 }

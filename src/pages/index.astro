@@ -24,7 +24,7 @@ const ogImage = new URL(`${base}/og.png`, Astro.site);
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
-    <meta name="theme-color" content="#0e1113" />
+    <meta name="theme-color" content="#f3f5f7" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Roger Vergés" />
     <meta property="og:title" content={title} />
@@ -51,8 +51,6 @@ const ogImage = new URL(`${base}/og.png`, Astro.site);
   </head>
   <body>
     <canvas class="field" data-field-canvas aria-hidden="true"></canvas>
-    <div class="ambient" aria-hidden="true"></div>
-    <div class="grain" aria-hidden="true"></div>
     <Rail />
     <div id="smooth-wrapper">
       <div id="smooth-content">

@@ -17,7 +17,7 @@ const focus = [
 ];
 ---
 
-<header class="hero" data-hero data-field="name" data-field-text="AI/ML Engineer|& Data Scientist" data-field-x="0" data-field-scale="1" data-field-opacity="1.4" data-accent="#e4e9ee">
+<header class="hero" data-hero data-field="name" data-field-text="AI/ML Engineer|& Data Scientist" data-field-x="0" data-field-scale="1" data-field-opacity="1.4" data-accent="#1a2530">
   <div class="hero-center">
     <!-- Drawn by the particle field; shown as text without WebGL. -->
     <h1 class="hero-name">AI/ML Engineer &amp; Data Scientist</h1>
@@ -68,11 +68,20 @@ const focus = [
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    max-width: 50rem;
-    gap: 0.45rem 1.75rem;
-    font-size: var(--step--1);
-    color: var(--mist);
+    max-width: 52rem;
+    gap: 0.5rem;
+    font-size: var(--step-0);
+    font-weight: 600;
+    color: var(--text);
     text-align: center;
+  }
+
+  .hero-focus li {
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    background: var(--paper);
+    border: 1px solid var(--hairline);
+    box-shadow: 0 1px 2px rgba(26, 37, 48, 0.06);
   }
 
   /* Centred without transforms: the load animation owns this element's transform. */
@@ -86,8 +95,8 @@ const focus = [
 
   @media (max-width: 40rem) {
     .hero-focus {
-      gap: 0.3rem 0.9rem;
-      font-size: 0.75rem;
+      gap: 0.35rem;
+      font-size: 0.8rem;
     }
 
     :global(.has-field) .hero-focus {
@@ -97,10 +106,9 @@ const focus = [
 
   .hero-name {
     font-size: clamp(3.2rem, 1rem + 9vw, 10rem);
-    font-weight: 650;
-    line-height: 0.9;
+    font-weight: 750;
+    line-height: 0.95;
     letter-spacing: -0.035em;
-    font-variation-settings: 'wdth' 125;
     text-align: center;
     text-wrap: balance;
   }
@@ -123,7 +131,7 @@ const focus = [
     align-items: end;
     gap: 1.5rem clamp(1.5rem, 3vw, 3rem);
     padding-top: 1.5rem;
-    border-top: 1px solid color-mix(in srgb, var(--limestone) 12%, transparent);
+    border-top: 1px solid var(--hairline);
   }
 
   .hero-id {
@@ -144,7 +152,6 @@ const focus = [
 
   .hero-role {
     font-weight: 560;
-    font-variation-settings: 'wdth' 108;
     line-height: 1.3;
   }
 

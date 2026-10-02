@@ -25,7 +25,7 @@ function art(formation: Parameters<typeof sketch>[0]) {
 const cards = projects.map((project) => ({ project, dots: art(project.formation as Parameters<typeof sketch>[0]) }));
 ---
 
-<section class="orbit" aria-labelledby="orbit-title" data-orbit-section data-field="galaxy" data-field-x="0" data-field-scale="1.2" data-accent="#c3b8ff">
+<section class="orbit" aria-labelledby="orbit-title" data-orbit-section data-field="scatter" data-field-x="0" data-field-scale="1" data-field-opacity="0" data-accent="#7c8794">
   <h2 class="orbit-title" id="orbit-title">All projects</h2>
 
   <div class="orbit-stage" data-orbit>
@@ -134,21 +134,18 @@ const cards = projects.map((project) => ({ project, dots: art(project.formation 
     cursor: inherit;
     transform-style: preserve-3d;
     text-align: left;
-    border-radius: 1.1rem;
+    border-radius: 14px;
   }
 
   .card-face,
   .card-back {
-    border-radius: 1.1rem;
+    border-radius: 12px;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    background:
-      linear-gradient(165deg, color-mix(in srgb, var(--accent) 10%, #1b2024) 0%, #13171a 55%, #101315 100%);
+    background: var(--paper);
     box-shadow:
-      inset 0 1px 0 color-mix(in srgb, var(--accent) 45%, transparent),
-      inset 0 0 0 1px color-mix(in srgb, var(--limestone) 7%, transparent),
-      0 30px 60px -28px rgba(0, 0, 0, 0.85),
-      0 0 50px -24px color-mix(in srgb, var(--accent) 50%, transparent);
+      inset 0 0 0 1px var(--hairline),
+      var(--shadow);
   }
 
   .card-face {
@@ -166,12 +163,9 @@ const cards = projects.map((project) => ({ project, dots: art(project.formation 
   .card-art {
     display: block;
     aspect-ratio: 100 / 72;
-    border-radius: 0.7rem;
+    border-radius: 8px;
     overflow: hidden;
-    background:
-      radial-gradient(90% 90% at 50% 40%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%),
-      #0b0e10;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--limestone) 5%, transparent);
+    background: var(--well);
   }
 
   .card-art svg {
@@ -189,15 +183,14 @@ const cards = projects.map((project) => ({ project, dots: art(project.formation 
 
   .card-kind {
     font-size: 0.72rem;
-    color: color-mix(in srgb, var(--accent) 80%, var(--limestone));
+    color: color-mix(in srgb, var(--accent) 90%, var(--text));
   }
 
   .card-name {
     font-size: clamp(0.92rem, 0.82rem + 0.3vw, 1.05rem);
     font-weight: 600;
     line-height: 1.22;
-    color: var(--limestone);
-    font-variation-settings: 'wdth' 104;
+    color: var(--text);
     text-wrap: balance;
   }
 
@@ -234,11 +227,11 @@ const cards = projects.map((project) => ({ project, dots: art(project.formation 
   .orbit-step {
     display: grid;
     place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--limestone) 18%, transparent);
-    background: transparent;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--hairline);
+    background: var(--paper);
     cursor: pointer;
     transition:
       transform 160ms var(--ease-out),
@@ -256,7 +249,7 @@ const cards = projects.map((project) => ({ project, dots: art(project.formation 
 
   @media (hover: hover) and (pointer: fine) {
     .orbit-step:hover {
-      border-color: var(--limestone);
+      border-color: var(--text);
     }
   }
 

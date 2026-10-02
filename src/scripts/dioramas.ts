@@ -1,4 +1,5 @@
 import type { Formation } from '../data/projects';
+import { AREAS, LAND, PRICE_MAX, SPAN } from '../data/finland';
 
 /** Particle formations, per stage. Pure (no DOM/WebGL), so cards can sketch them at build time. */
 
@@ -293,6 +294,177 @@ const LAYERS = [5, 8, 8, 5];
 const nodeAt = (layer: number, k: number): Vec3 => [-2.1 + layer * 1.4, ((k + 0.5) / LAYERS[layer] - 0.5) * 2.9, 0];
 const cellHeight = (a: number, b: number) => 0.3 + 1.7 * Math.abs((Math.sin(a * 12.9898 + b * 78.233) * 43758.5453) % 1);
 
+// ---------- Asumisvalinta ----------
+
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+const decode = (s: string, i: number) => (ALPHA.indexOf(s[i]) << 6) | ALPHA.indexOf(s[i + 1]);
+// Map coordinates, enlarged a little to fill the view.
+const unq = (v: number) => ((v / 4095) * 2 * SPAN - SPAN) * 1.15;
+const AREA_N = AREAS.length / 6;
+const AREA_AT = Array.from({ length: AREA_N }, (_, k) => {
+  const i = k * 6;
+  return { x: unq(decode(AREAS, i)), z: unq(decode(AREAS, i + 2)), price: (decode(AREAS, i + 4) / 4095) * PRICE_MAX };
+});
+const LAND_N = LAND.length / 5;
+const LAND_AT = Array.from({ length: LAND_N }, (_, k) => {
+  const i = k * 5;
+  return { x: unq(decode(LAND, i)), z: unq(decode(LAND, i + 2)), tone: ALPHA.indexOf(LAND[i + 4]) / 63 };
+});
+const priceTone = (price: number) => clamp01((Math.log(Math.max(price, 1)) - Math.log(600)) / (Math.log(7000) - Math.log(600)));
+/** Picks from `items` in proportion to `weight`; items are sorted north to south so morphs stay local. */
+function weighted<T extends { z: number; x: number }>(items: T[], weight: (item: T) => number) {
+  const sorted = [...items].sort((a, b) => a.z - b.z || a.x - b.x);
+  let sum = 0;
+  const cum = sorted.map((item) => (sum += weight(item)));
+  return (u: number) => {
+    const target = u * sum;
+    let lo = 0;
+    let hi = cum.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (cum[mid] < target) lo = mid + 1;
+      else hi = mid;
+    }
+    return sorted[lo];
+  };
+}
+// Areas by price, so the dearest places glow on the flat map.
+const spikeArea = weighted(AREA_AT, (a) => a.price);
+// The map as a grid of price columns. Heights are stylised: a low base, peaking at the big cities.
+const CELL = 0.2;
+const at = (lon: number, lat: number) => ({ x: (lon - 25.6) * Math.cos((64.5 * Math.PI) / 180) * 0.33 * 1.15, z: -(lat - 64.9) * 0.33 * 1.15 });
+const CITIES = [
+  { ...at(24.94, 60.17), h: 2.3 }, // Helsinki
+  { ...at(23.76, 61.5), h: 1.25 }, // Tampere
+  { ...at(22.27, 60.45), h: 1.1 }, // Turku
+  { ...at(25.47, 65.01), h: 0.95 }, // Oulu
+  { ...at(25.73, 62.24), h: 0.8 }, // Jyväskylä
+  { ...at(27.68, 62.89), h: 0.75 }, // Kuopio
+  { ...at(25.66, 60.98), h: 0.7 }, // Lahti
+  { ...at(21.62, 63.1), h: 0.6 }, // Vaasa
+  { ...at(29.76, 62.6), h: 0.55 }, // Joensuu
+  { ...at(25.73, 66.5), h: 0.55 }, // Rovaniemi
+];
+const cellKey = (x: number, z: number) => `${Math.floor(x / CELL)},${Math.floor(z / CELL)}`;
+const COLUMNS = (() => {
+  const cells = new Map<string, { x: number; z: number }>();
+  for (const a of AREA_AT) {
+    cells.set(cellKey(a.x, a.z), { x: (Math.floor(a.x / CELL) + 0.5) * CELL, z: (Math.floor(a.z / CELL) + 0.5) * CELL });
+  }
+  return [...cells.values()].map((c) => {
+    const peak = 1.3 * Math.max(...CITIES.map((city) => city.h * Math.exp(-((c.x - city.x) ** 2 + (c.z - city.z) ** 2) / 0.03)));
+    const h = Math.max(0.08 + 0.1 * hash(c.x * 7 + c.z * 13), peak);
+    return { ...c, h, price: 600 + (h / 3) * 6400 };
+  });
+})();
+// Points per column follow its height, so every column is equally dense.
+const pickColumn = weighted(COLUMNS, (c) => c.h + 0.12);
+// The flat in the scenario below: postal code 00880, Herttoniemi, Helsinki.
+const CHOSEN = AREA_AT[77];
+const CHOSEN_COLUMN = COLUMNS.find((c) => cellKey(c.x, c.z) === cellKey(CHOSEN.x, CHOSEN.z))!;
+
+// The app's own default scenario for a 50 m² one-bedroom flat in 00880 over 15 years:
+// wealth by year (0 to 15) for buy, rent and right of occupancy (live planner API, 2026-10-02).
+const WEALTH = {
+  buy: [13981, 18841, 23839, 28980, 34269, 39709, 45306, 51064, 56990, 63087, 69361, 75819, 82465, 89306, 96348, 103598],
+  rent: [23639, 27223, 30829, 34457, 38110, 41792, 45506, 49255, 53041, 56871, 60746, 64672, 68654, 72696, 76803, 80982],
+  aso: [23639, 28597, 33748, 38880, 44068, 49315, 54622, 59994, 65434, 70945, 76532, 82199, 87949, 93787, 99719, 105750],
+};
+const YEARS = WEALTH.buy.length - 1;
+// Plotted against renting: rent is the zero line, and buying crosses it at break-even.
+const VS_RENT = {
+  buy: WEALTH.buy.map((w, i) => w - WEALTH.rent[i]),
+  rent: WEALTH.rent.map(() => 0),
+  aso: WEALTH.aso.map((w, i) => w - WEALTH.rent[i]),
+};
+const ZERO = -0.35;
+const chartX = (year: number) => -2 + (year / YEARS) * 4;
+const chartY = (gap: number) => ZERO + (gap / 30000) * 1.8;
+const gapAt = (series: number[], year: number) => {
+  const k = Math.min(YEARS - 1, Math.floor(year));
+  return series[k] + (series[k + 1] - series[k]) * (year - k);
+};
+const BREAK_EVEN = (() => {
+  const k = VS_RENT.buy.findIndex((d) => d >= 0);
+  const d0 = VS_RENT.buy[k - 1];
+  return k - 1 + d0 / (d0 - VS_RENT.buy[k]);
+})();
+
+function landAt(p: PointInfo, dim: number): Vec {
+  const l = LAND_AT[Math.floor(p.u[0] * LAND_N)];
+  return [l.x + gauss(p.rnd) * 0.012, 0, l.z + gauss(p.rnd) * 0.012, (0.1 + 0.65 * Math.pow(l.tone, 1.4)) * dim];
+}
+
+function housingMap(p: PointInfo): Vec {
+  if (p.role === 1) {
+    const a = spikeArea(p.u[0]);
+    return [a.x + gauss(p.rnd) * 0.008, 0, a.z + gauss(p.rnd) * 0.008, 0.2 + 0.6 * priceTone(a.price)];
+  }
+  if (p.role === 2) {
+    const angle = p.u[0] * TAU;
+    return [CHOSEN.x + Math.cos(angle) * 0.07, 0, CHOSEN.z + Math.sin(angle) * 0.07, 1];
+  }
+  return landAt(p, 1);
+}
+
+function housingColumns(p: PointInfo): Vec {
+  // Most of the land rises into the columns too; a quarter stays as the floor.
+  if (p.role === 1 || (p.role === 0 && p.s > 0.25)) {
+    const c = pickColumn(p.u[0]);
+    const half = CELL * 0.3;
+    const tone = 0.15 + 0.6 * priceTone(c.price);
+    if (p.u[1] < 0.72) {
+      // Vertical edges.
+      const corner = Math.floor(p.u[2] * 4);
+      const v = p.rnd();
+      return [c.x + (corner % 2 ? half : -half), v * c.h, c.z + (corner < 2 ? half : -half), tone + 0.15 * v];
+    }
+    const [x, z] = onRect(p.u[2], c.x - half, c.z - half, half * 2, half * 2);
+    return [x, c.h, z, tone + 0.2];
+  }
+  if (p.role === 2) {
+    // A ring above the column that holds the chosen flat.
+    const angle = p.u[0] * TAU;
+    return [CHOSEN_COLUMN.x + Math.cos(angle) * 0.1, CHOSEN_COLUMN.h + 0.12, CHOSEN_COLUMN.z + Math.sin(angle) * 0.1, 1];
+  }
+  return landAt(p, 0.35);
+}
+
+function housingChart(p: PointInfo): Vec {
+  const z = gauss(p.rnd) * 0.03;
+  if (p.role === 0) {
+    // Buy, rent (the zero line) and right of occupancy.
+    const line = Math.floor(p.u[2] * 3);
+    const series = [VS_RENT.buy, VS_RENT.rent, VS_RENT.aso][line];
+    const year = p.u[0] * YEARS;
+    return [chartX(year) + gauss(p.rnd) * 0.008, chartY(gapAt(series, year)) + gauss(p.rnd) * 0.01, z, [1, 0.5, 0.4][line]];
+  }
+  if (p.role === 1) {
+    // Area between buying and renting, dim while buying is behind.
+    const year = p.u[0] * YEARS;
+    const edge = chartY(gapAt(VS_RENT.buy, year));
+    const f = 1 - p.u[1] * p.u[1];
+    const ahead = edge > ZERO;
+    return [chartX(year), ZERO + (edge - ZERO) * f, z, (ahead ? 0.05 : 0.03) + (ahead ? 0.26 : 0.12) * f * f];
+  }
+  if (p.role === 2) {
+    // Break-even: a dashed line through the crossing, and a ring on it.
+    const x = chartX(BREAK_EVEN);
+    if (p.u[1] < 0.55) {
+      const v = -1.05 + p.u[0] * 2.3;
+      return [x + gauss(p.rnd) * 0.004, v, z, Math.floor((v + 1.05) * 14) % 2 === 0 ? 0.75 : -1];
+    }
+    const angle = p.u[0] * TAU;
+    return [x + Math.cos(angle) * 0.085, ZERO + Math.sin(angle) * 0.085, z, 1];
+  }
+  // A tick on the zero line every five years, and a faint value axis.
+  if (p.u[1] < 0.35) {
+    const year = Math.floor(p.u[0] * 4) * 5;
+    return [chartX(year) + gauss(p.rnd) * 0.004, ZERO - 0.04 - p.u[2] * 0.08, z, 0.4];
+  }
+  return [chartX(0) - 0.12 + gauss(p.rnd) * 0.004, -1.05 + p.u[0] * 2.3, z, 0.22];
+}
+
 // ---------- All formations ----------
 
 function single(at: (p: PointInfo) => Vec): SequenceSpec {
@@ -326,6 +498,16 @@ export const sequences: Record<Exclude<Formation, 'name'>, SequenceSpec> = {
           return [...column(p, RANK[p.role], first ? 0.45 : 0), first ? 1 : 0.2];
         },
       },
+    ],
+  },
+
+  housing: {
+    // Land / chart lines, price columns / area fill, the chosen flat / break-even, axis.
+    roles: [0.5, 0.4, 0.025, 0.075],
+    stages: [
+      { rx: 1.2, ry: 0, at: housingMap },
+      { rx: 0.62, ry: -0.5, at: housingColumns },
+      { rx: 0, ry: -0.08, at: housingChart },
     ],
   },
 

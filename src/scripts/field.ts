@@ -9,7 +9,7 @@ import {
   ShaderMaterial,
   Points,
   Group,
-  AdditiveBlending,
+  NormalBlending,
 } from 'three';
 import { gsap } from 'gsap';
 import type { Formation } from '../data/projects';
@@ -25,9 +25,8 @@ function nameShape(lines: string[], count: number, halfWidth: number, halfHeight
   if (!ctx) return [];
 
   const setFont = (px: number) => {
-    ctx.font = `650 expanded ${px}px "Mona Sans Variable", sans-serif`;
-    ctx.fontStretch = 'expanded';
-    ctx.letterSpacing = `${-0.035 * px}px`;
+    ctx.font = `750 ${px}px "Schibsted Grotesk Variable", sans-serif`;
+    ctx.letterSpacing = `${-0.03 * px}px`;
   };
   setFont(100);
   const widest = Math.max(...lines.map((line) => ctx.measureText(line).width));
@@ -70,6 +69,7 @@ const vertex = /* glsl */ `
   uniform float uPart;
   uniform float uDrift;
   uniform float uSizeMul;
+  uniform float uSolid;
   attribute float aSeed;
   attribute float aDust;
   attribute float aTone;
@@ -101,9 +101,11 @@ const vertex = /* glsl */ `
     vGlow = reach;
     gl_Position = projectionMatrix * mv;
     float tone = max(aTone, 0.0);
-    gl_PointSize = uSize * uSizeMul * (0.45 + aSeed * 0.9) * (0.8 + tone * 0.4) / -mv.z;
+    gl_PointSize = uSize * uSizeMul * mix(0.45 + aSeed * 0.9, 1.0, uSolid) * (0.8 + tone * 0.4) / -mv.z;
     // Below zero, tone fades a point out entirely.
     vAlpha = (0.25 + 0.75 * aSeed) * (1.0 - aDust * 0.55) * (0.5 + tone * 0.7) * clamp(1.0 + aTone, 0.0, 1.0);
+    // Text points are made solid so the headline reads crisply.
+    vAlpha = mix(vAlpha, 1.0 - aDust * 0.7, uSolid);
     vTone = tone;
   }
 `;
@@ -117,8 +119,9 @@ const fragment = /* glsl */ `
   void main() {
     float d = length(gl_PointCoord - 0.5);
     float disc = smoothstep(0.5, 0.05, d);
-    vec3 color = mix(uColor * 0.85, vec3(1.0), smoothstep(0.6, 1.0, vTone) * 0.7);
-    color = mix(color, vec3(1.0), vGlow * 0.35);
+    // On the light page, the brightest tones deepen towards ink rather than white.
+    vec3 color = mix(uColor, vec3(0.04, 0.07, 0.13), smoothstep(0.6, 1.0, vTone) * 0.6);
+    color = mix(color, uColor, vGlow * 0.35);
     gl_FragColor = vec4(color, disc * vAlpha * uOpacity * (1.0 + vGlow * 0.6));
   }
 `;
@@ -150,8 +153,8 @@ interface Stage {
 }
 
 /** The headline stays nearly still to stay legible. */
-const FEEL_NAME = { sway: 0.008, tilt: 0.05, part: 1, drift: 0.004, size: 0.58 };
-const FEEL_SHAPE = { sway: 0.1, tilt: 1, part: 0, drift: 0.025, size: 0.75 };
+const FEEL_NAME = { sway: 0.008, tilt: 0.05, part: 1, drift: 0.003, size: 1.05, solid: 1 };
+const FEEL_SHAPE = { sway: 0.1, tilt: 1, part: 0, drift: 0.025, size: 0.75, solid: 0 };
 
 /** `headline`: the text the 'name' formation draws, one entry per line. */
 export function createField(
@@ -246,7 +249,7 @@ export function createField(
     uTime: { value: 0 },
     uSize: { value: 0 },
     uAgitation: { value: 0 },
-    uColor: { value: new Color('#cfd6de') },
+    uColor: { value: new Color('#0b1220') },
     uOpacity: { value: 0 },
     uPointer: { value: [9, 9] as [number, number] },
     uDrag: { value: [0, 0] as [number, number] },
@@ -255,6 +258,7 @@ export function createField(
     uPart: { value: 0 },
     uDrift: { value: 0.025 },
     uSizeMul: { value: 1 },
+    uSolid: { value: 0 },
   };
   const material = new ShaderMaterial({
     vertexShader: vertex,
@@ -262,7 +266,7 @@ export function createField(
     uniforms,
     transparent: true,
     depthWrite: false,
-    blending: AdditiveBlending,
+    blending: NormalBlending,
   });
   const group = new Group();
   group.add(new Points(geometry, material));
@@ -459,6 +463,7 @@ export function createField(
       uniforms.uPart.value = mix(fa.part, fb.part, e);
       uniforms.uDrift.value = mix(fa.drift, fb.drift, e);
       uniforms.uSizeMul.value = mix(fa.size, fb.size, e);
+      uniforms.uSolid.value = mix(fa.solid, fb.solid, e);
       const sway = mix(fa.sway, fb.sway, e);
       const tilt = mix(fa.tilt, fb.tilt, e);
       group.position.set(mix(a.x, b.x, e) * halfWidth, mix(a.y ?? 0, b.y ?? 0, e) * halfHeight, 0);
@@ -498,7 +503,7 @@ export function createField(
     document.documentElement.addEventListener('pointerleave', onLeave);
   }
   // The headline needs the web font.
-  document.fonts.load('650 100px "Mona Sans Variable"').then(buildName, buildName);
+  document.fonts.load('750 100px "Schibsted Grotesk Variable"').then(buildName, buildName);
   gsap.to(fadeIn, { value: 1, duration: still ? 0 : 1.2, ease: 'power2.out' });
   pour(2.4);
   gsap.ticker.add(tick);

@@ -33,9 +33,9 @@ const title = project.title.replaceAll('-', '‑');
     <!-- Room for the diorama on narrow screens. -->
     <div class="scene-stage" aria-hidden="true"></div>
 
-    <div class="scene-text">
+    <div class="scene-text" data-reveal-panel>
+      <p class="scene-kind" data-reveal><span class="scene-dot" aria-hidden="true"></span>{project.kind}</p>
       <h2 class="scene-title" id={`${project.slug}-title`} data-reveal>{title}</h2>
-      <p class="scene-kind" data-reveal>{project.kind}</p>
       <p class="scene-desc" data-reveal>{project.description}</p>
 
       <ul class="scene-stack" data-reveal aria-label="Stack">
@@ -71,32 +71,48 @@ const title = project.title.replaceAll('-', '‑');
     height: 58svh;
   }
 
+  /* On desktop the panel bleeds past the text column, so the text keeps its width. */
   .scene-text {
+    --pad: clamp(1.25rem, 2.2vw, 2rem);
+    position: relative;
     display: grid;
     gap: 1.1rem;
     align-content: start;
-    max-width: 32rem;
+    max-width: calc(32rem + 2 * var(--pad));
+    padding: var(--pad);
+    border-radius: 12px;
+    border: 1px solid var(--hairline);
+    background: var(--paper);
+    box-shadow: var(--shadow);
   }
 
   .scene-title {
-    font-size: clamp(2rem, 1rem + 2.4vw, 3.6rem);
-    font-weight: 640;
-    line-height: 0.95;
-    letter-spacing: -0.035em;
+    font-size: clamp(1.9rem, 1rem + 2vw, 3.1rem);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
     text-wrap: balance;
-    font-variation-settings: 'wdth' 112;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.3rem;
   }
 
   .scene-kind {
-    color: var(--accent);
-    font-size: var(--step-0);
-    font-weight: 560;
-    font-variation-settings: 'wdth' 108;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text);
+    font-size: var(--step--1);
+    font-weight: 600;
+  }
+
+  .scene-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--accent);
   }
 
   .scene-desc {
-    color: color-mix(in srgb, var(--limestone) 80%, var(--ink));
+    color: var(--mist);
     font-size: 0.95rem;
     line-height: 1.65;
     text-wrap: pretty;
@@ -105,22 +121,25 @@ const title = project.title.replaceAll('-', '‑');
   .scene-stack {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.3rem 0;
-    font-size: var(--step--1);
-    color: var(--ash);
+    gap: 0.35rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--hairline);
+    font-size: 0.75rem;
+    color: var(--mist);
   }
 
-  .scene-stack li:not(:last-child)::after {
-    content: '/';
-    margin-inline: 0.6rem;
-    color: color-mix(in srgb, var(--accent) 55%, var(--slate));
+  .scene-stack li {
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    background: var(--well);
+    line-height: 1.5;
   }
 
   .scene-links {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.6rem;
-    padding-top: 0.4rem;
+    gap: 0.5rem;
+    padding-top: 0.3rem;
   }
 
   @media (min-width: 64rem) {
@@ -143,6 +162,7 @@ const title = project.title.replaceAll('-', '‑');
 
     .scene-text {
       grid-column: 2 / span 4;
+      margin-inline: calc(-1 * var(--pad));
     }
 
     .scene[data-side='left'] .scene-text {

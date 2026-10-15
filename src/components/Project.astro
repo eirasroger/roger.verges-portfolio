@@ -174,4 +174,35 @@ const title = project.title.replaceAll('-', '‑');
       min-height: 125svh;
     }
   }
+
+  /* Short laptop screens: a pinned panel has to fit the viewport for the whole hold. */
+  @media (min-width: 64rem) and (max-height: 56rem) {
+    .scene-text {
+      gap: 0.8rem;
+    }
+
+    .scene-title {
+      font-size: clamp(1.7rem, 0.9rem + 1.8vw, 2.5rem);
+      margin-bottom: 0;
+    }
+
+    .scene-desc {
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+
+    .scene-stack {
+      gap: 0.3rem;
+      padding-top: 0.8rem;
+      font-size: 0.7rem;
+    }
+
+    .scene-stack li {
+      padding: 0.12rem 0.5rem;
+    }
+
+    .scene-links {
+      padding-top: 0;
+    }
+  }
 </style>

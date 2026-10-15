@@ -58,14 +58,15 @@ export const projects: Project[] = [
     title: 'Asumisvalinta: Housing Decision Analytics Platform',
     kind: 'Analytics platform and LLM agent',
     description:
-      'A web application that compares renting, right of occupancy (asumisoikeus), and buying a flat in Finland over a planned length of stay, across all 3,018 postal code areas. Open data from Statistics Finland and the ECB loads through dlt into DuckDB, where a dbt project with data tests feeds governed MetricFlow metrics and a deterministic scenario engine encoding Finnish tax and loan rules. An LLM agent answers market questions through those metrics and the engine, with every figure traced to a tool result, and a golden question set evaluates it against a text-to-SQL baseline. A monthly workflow refreshes and republishes the data.',
+      'A web application in Finnish and English that compares renting, right of occupancy (asumisoikeus), and buying a flat in Finland over a planned length of stay, across all 3,018 postal code areas. Open data from Statistics Finland and the ECB loads through dlt into DuckDB, where a dbt project with data tests feeds governed MetricFlow metrics and a deterministic scenario engine encoding Finnish tax and loan rules. An LLM agent answers market questions through those metrics and the engine, with every figure traced to a tool result, and a golden question set evaluates it against a text-to-SQL baseline. A monthly workflow refreshes the data and redeploys the API to Cloud Run and the site to Cloudflare, where a Worker rate-limits the API and D1 caps daily token use.',
     stack: [
-      'Python', 'dlt', 'DuckDB', 'Snowflake', 'dbt', 'MetricFlow', 'SQL', 'Pydantic', 'FastAPI', 'Postgres',
-      'OpenAI API', 'pytest', 'TypeScript', 'Next.js', 'React', 'MapLibre GL', 'GitHub Actions', 'Vercel',
+      'Python', 'dlt', 'DuckDB', 'Snowflake', 'dbt', 'MetricFlow', 'SQL', 'Pydantic', 'FastAPI',
+      'OpenAI API', 'pytest', 'TypeScript', 'Next.js', 'React', 'Tailwind CSS', 'MapLibre GL', 'ECharts',
+      'Docker', 'Google Cloud (Cloud Run, Artifact Registry)', 'Cloudflare (Workers, D1)', 'GitHub Actions',
     ],
     links: [
       code('asumisvalinta'),
-      { kind: 'live', label: 'Open live app', href: 'https://asumisvalinta.vercel.app' },
+      { kind: 'live', label: 'Open live app', href: 'https://asumisvalinta.fi' },
     ],
     accent: '#eb6834',
     formation: 'housing',

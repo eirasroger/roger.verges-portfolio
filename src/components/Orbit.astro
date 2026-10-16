@@ -62,8 +62,8 @@ const cards = projects.map((project) => ({ project, dots: art(project.formation 
         projects.map((project, i) => (
           <div class="picked" data-picked={i} hidden={i !== 0} style={`--accent: ${project.accent}`}>
             <div class="picked-links">
-              {project.links.map((link) => (
-                <a class="button" href={link.href} target="_blank" rel="noopener" data-primary={link.kind === 'code' ? '' : undefined}>
+              {project.links.map((link, j) => (
+                <a class="button" href={link.href} target="_blank" rel="noopener" data-primary={j === 0 ? '' : undefined}>
                   <Icon name={link.kind} />
                   {link.label}
                 </a>
